@@ -559,7 +559,7 @@ class Ejaculation_Panel:
             return False
         elif body_part_cid == 9 and not handle_premise.handle_penis_in_t_nrethral(0):
             return False
-        elif body_part_cid == 15 and not handle_premise.handle_last_cmd_deep_throat(0):
+        elif body_part_cid == 15 and not handle_premise.handle_penis_in_t_deep_throat(0):
             return False
 
         # 如果没有口交合意则无法射在口腔
