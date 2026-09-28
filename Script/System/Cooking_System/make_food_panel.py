@@ -1015,21 +1015,39 @@ class SeeFoodListByFoodNameDraw:
 
             # 本菜自选特技（4 选 1，免费、随时可换；B 拿手解锁，EX 阶数值升级）
             self._dish_special_returns = {}
-            if cooking.get_prof_tier(recipe_cid) >= cooking.PROF_SLOT_TIER:
+            _slot_tier = cooking.get_prof_tier(recipe_cid)
+            if _slot_tier >= cooking.PROF_PREVIEW_TIER:
+                line_feed.draw()
                 slot_title = draw.NormalDraw()
-                slot_title.text = _("○本菜特技（4 选 1，免费随时换）：\n")
+                if _slot_tier >= cooking.PROF_SLOT_TIER:
+                    slot_title.text = _("○本菜特技（4 选 1，免费随时换）：")
+                else:
+                    slot_title.text = _("○本菜特技池预览（还差 {0} 次到 {1} {2} 可选）：").format(
+                        max(0, cooking.PROF_TIER_COUNTS[cooking.PROF_SLOT_TIER - 1] - cooking.get_prof_count(recipe_cid)),
+                        cooking.PROF_TIER_LETTERS[cooking.PROF_SLOT_TIER],
+                        cooking.PROF_TIER_NAMES[cooking.PROF_SLOT_TIER],
+                    )
                 slot_title.draw()
+                line_feed.draw()
                 chosen_name = cooking.get_dish_special_choice(recipe_cid)
                 for slot_index, slot_item in enumerate(cooking.get_dish_special_candidates(recipe_cid)):
                     slot_effect = slot_item[3] if cooking.is_dish_special_ex(recipe_cid) else slot_item[2]
-                    slot_prefix = _("[已选]") if slot_item[0] == chosen_name else _("[选择]")
-                    slot_text = _("{0}{1}（{2} {3}）").format(slot_prefix, slot_item[0], slot_item[1], slot_effect)
-                    slot_draw = draw.LeftButton(slot_text, "feast_dish_special_" + str(slot_index), self.width)
-                    slot_draw.draw()
-                    return_list.append(slot_draw.return_text)
-                    self._dish_special_returns[slot_draw.return_text] = slot_item[0]
+                    if _slot_tier >= cooking.PROF_SLOT_TIER:
+                        slot_prefix = _("[已选]") if slot_item[0] == chosen_name else _("[选择]")
+                        slot_text = _("{0}{1}（{2} {3}）").format(slot_prefix, slot_item[0], slot_item[1], slot_effect)
+                        slot_draw = draw.LeftButton(slot_text, "feast_dish_special_" + str(slot_index), self.width)
+                        slot_draw.draw()
+                        return_list.append(slot_draw.return_text)
+                        self._dish_special_returns[slot_draw.return_text] = slot_item[0]
+                    else:
+                        preview_draw = draw.NormalDraw()
+                        preview_draw.text = _("　[预览]{0}（{1} {2}）").format(slot_item[0], slot_item[1], slot_effect)
+                        preview_draw.draw()
+                    # 一行一条，避免和后面的批量制作按钮挤在同一行（用户 2026-09-29 截图）
+                    line_feed.draw()
 
-            # 数量调整按钮
+            # 数量调整按钮（先换行，避免和特技按钮挤在一起）
+            line_feed.draw()
             min_draw = draw.CenterButton(_("[最小]"), _("最小"), int(window_width / 6))
             min_draw.draw()
             return_list.append(min_draw.return_text)

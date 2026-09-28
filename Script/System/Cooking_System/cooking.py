@@ -756,6 +756,8 @@ PROF_TIER_PAYOFF = {
 """ 各阶收益（用于确认页「距下一阶」提示） """
 PROF_TIME_MULT_STEPS = [(1, 0.95), (3, 0.90), (4, 0.85), (6, 0.80), (7, 0.70)]
 """ 本菜耗时倍率：按当前阶取最高档、不叠加 """
+PROF_PREVIEW_TIER = 2
+""" 特技池预览阶（E 上手，累计 6 次）：只读展示 4 条候选，还不能选 """
 PROF_SLOT_TIER = 5
 """ 自选特技槽解锁阶（B 拿手，累计 25 次） """
 PROF_EX_TIER = 8
@@ -1182,6 +1184,17 @@ def prof_summary_text(food_cid: int) -> str:
     count = get_prof_count(food_cid)
     tier = get_prof_tier(food_cid)
     text = _("熟练度: {0} {1}（累计{2}次）").format(PROF_TIER_LETTERS[tier], PROF_TIER_NAMES[tier], count)
+    # 当前已经拿到的收益（不能只显示"下一阶给什么"，用户 2026-09-29 指出）
+    _now = []
+    _steps = [s for s in PROF_TIME_MULT_STEPS if tier >= s[0]]
+    if _steps:
+        _now.append(_("本菜耗时 -{0}%").format(int(round((1 - _steps[-1][1]) * 100))))
+    if tier >= PROF_SLOT_TIER:
+        _now.append(_("自选特技槽已解锁"))
+    if tier >= PROF_EX_TIER:
+        _now.append(_("已装特技效果 ×{0}").format(PROF_EX_UPGRADE))
+    if _now:
+        text += _("｜当前：{0}").format("、".join(_now))
     if tier < len(PROF_TIER_COUNTS):
         next_tier = tier + 1
         need = max(0, PROF_TIER_COUNTS[tier] - count)

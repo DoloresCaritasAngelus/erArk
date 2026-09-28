@@ -8264,12 +8264,24 @@ def handle_eat_add_just(
         # 本菜自选特技的「状态向」进食效果：只对入席干员生效、不含博士
         if chara_id and dish_special_dim:
             _special_gain = 23 if dish_special_ex else 15
+            # 「抚慰」要扣的负面状态（按 CSV 里的状态名取 id，别硬编码）
+            _NEG_STATE_IDS = [
+                _sid for _sid, _cfg in game_config.config_character_state.items()
+                if getattr(_cfg, "name", "") in ("苦痛", "恐怖", "抑郁", "反感")
+            ]
             if dish_special_dim == "疲劳":
                 target_data.tired_point = max(0, target_data.tired_point - _special_gain)
             elif dish_special_dim == "怒气":
                 target_data.angry_point = max(0, target_data.angry_point - _special_gain)
-            elif dish_special_dim == "心情":
-                handle_mood_to_good(chara_id, add_time, change_data, now_time)
+            elif dish_special_dim in ("心情", "抚慰"):
+                # 「抚慰」：直接**扣当前**负面状态数值（苦痛17/恐怖18/抑郁19/反感20），不是只减少增长
+                for _neg_state in _NEG_STATE_IDS:
+                    target_data.status_data[_neg_state] = max(
+                        0, target_data.status_data.get(_neg_state, 0) - _special_gain
+                    )
+            elif dish_special_dim == "掩味":
+                # 「掩味」：被吃下时也扣当前反感（拒收路径见 handle_high_obscenity_failed_adjust）
+                target_data.status_data[20] = max(0, target_data.status_data.get(20, 0) - _special_gain)
             elif dish_special_dim in ("好感", "信赖"):
                 _saved_special_target = character_data.target_character_id
                 character_data.target_character_id = chara_id
