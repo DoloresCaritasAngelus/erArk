@@ -135,6 +135,9 @@ class Food:
         """ 调味类型 """
         self.special_seasoning_amount: int = 0
         """ 特殊调味的量 """
+        self.dish_special: str = ""
+        """ 本份食物**制作时**定下的自选特技名（空＝制作时没选；老存档食物为空时回落到菜谱当前选择） """
+
         self.milk_ml: int = 0
         """ 牛奶毫升数 """
         self.urine_ml: int = 0

@@ -1177,6 +1177,8 @@ class SeeFoodListByFoodNameDraw:
                     break
             # 创建食物对象并赋予名字、作者、品质、味道
             new_food = cooking.create_food("", recipe_cid, food_quality, character_data.name)
+            # 制作时就把当前自选特技烙在这份食物上：之后换槽不影响已有成品，也不会与别的槽混堆
+            new_food.dish_special = cooking.get_dish_special_choice(recipe_cid)
             new_food.special_seasoning = self.special_seasoning
             if self.special_seasoning in {11, 12}:
                 new_food.special_seasoning_amount = semen_count

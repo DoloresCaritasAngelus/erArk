@@ -498,9 +498,7 @@ def judge_accept_special_seasoning_food(character_id: int):
     # 口才+菜谱难度+食物品质的双重加成判定
     accept_rate = pl_character_data.ability[40] * 10 + food_difficulty * 5 + food_quality * 5
     accept_rate = max(accept_rate,5) # 保底5%几率
-    # 本菜装了「调味接受」型自选特技时更容易被接受（EX 阶为 +30%）
-    if get_dish_special_dim(food_recipe_id) == "调味接受":
-        accept_rate = int(accept_rate * (1.3 if is_dish_special_ex(food_recipe_id) else 1.2))
+    # 「掩味」不再改接受率，改为**被拒绝时大幅降低反感**（见 Settle/default.handle_high_obscenity_failed_adjust）
 
     # debug模式直接过
     # if cache.debug_mode:
@@ -615,7 +613,7 @@ def handle_food_deterioration(character_id: int):
     for food_uid in character_data.food_bag:
         food_data: Food = character_data.food_bag[food_uid]
         # 食物变质；本菜装了「耐放」型自选特技时损耗更慢（EX 阶只掉 1 点）
-        if get_dish_special_dim(food_data.recipe) == "耐放":
+        if get_food_special_dim(food_data) == "耐放":
             if is_dish_special_ex(food_data.recipe):
                 food_data.quality = food_data.quality - 1
             else:
@@ -646,7 +644,7 @@ FEAST_DATA_BY_CID = {
     9005: {"effect": "starlight", "mult": 1.0},
     9006: {"effect": "sakura", "mult": 1.0},
     9007: {"effect": "family", "mult": 1.0},
-    9008: {"effect": "tea", "mult": 0.6},
+    9008: {"effect": "tea", "mult": 1.0},
     9009: {"effect": "golden", "mult": 1.25},
     9010: {"effect": "anniversary", "mult": 1.5},
 }
@@ -661,7 +659,7 @@ FEAST_EFFECT_TEXT = {
     "starlight": (_("星光助兴"), _("入席者疲劳 −20，且更兴奋")),
     "sakura": (_("花见之情"), _("入席者对你的好感 +25%")),
     "family": (_("家规约束"), _("你亲手做的这桌：信赖 +50%")),
-    "tea": (_("清茶淡点"), _("轻食：进食收益 ×0.6")),
+    "tea": (_("清茶淡点"), _("轻食：入席者不易吃饱（饥饿值只降到一半），可以接着吃")),
     "golden": (_("黄金满席"), _("进食收益 ×1.25")),
     "anniversary": (_("周年同庆"), _("进食收益 ×1.5")),
 }
@@ -985,6 +983,48 @@ def get_prof_time_mult(food_cid: int) -> float:
     if tier >= PROF_SLOT_TIER and get_dish_special_dim(food_cid) == "耗时":
         mult *= 0.85 if is_dish_special_ex(food_cid) else 0.90
     return mult
+
+
+def get_food_special(food) -> tuple:
+    """
+    取「某一份食物」自己带的特技候选元组（食物实例在制作时就定下了名字，之后换槽不影响已有成品）
+
+    Keyword arguments:
+    food -- Food 实例（可为 None）
+    Return arguments:
+    tuple -- (候选名, 维度, 基础效果, EX 效果)；没选时为 ()
+    """
+    if food is None:
+        return ()
+    name = getattr(food, "dish_special", "") or ""
+    recipe_id = getattr(food, "recipe", -1)
+    if not name:
+        # 老存档的食物没有该字段，回落到"菜谱当前选择"（与改动前行为一致）
+        return get_dish_special(recipe_id)
+    for item in get_dish_special_candidates(recipe_id):
+        if item[0] == name:
+            return item
+    return ()
+
+
+def get_food_special_choice(food) -> str:
+    """ 取某一份食物上的自选特技名（可能为空字符串） """
+    item = get_food_special(food)
+    return item[0] if item else ""
+
+
+def get_food_special_dim(food) -> str:
+    """ 取某一份食物上的自选特技维度（可能为空字符串） """
+    item = get_food_special(food)
+    return item[1] if item else ""
+
+
+def food_special_effect_text(food) -> str:
+    """ 取某一份食物上的自选特技效果文案（EX 阶取升级后的数值） """
+    item = get_food_special(food)
+    if not item:
+        return ""
+    return item[3] if is_dish_special_ex(getattr(food, "recipe", -1)) else item[2]
 
 
 def get_dish_special_candidates(food_cid) -> list:
