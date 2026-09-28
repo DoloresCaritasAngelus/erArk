@@ -8151,6 +8151,10 @@ def handle_eat_add_just(
     if feast_flag:
         state_add = int(state_add * feast_mult)
         hpmp_add = int(hpmp_add * feast_mult)
+    # 本菜自选特技的进食效果倍率（+15%；EX 阶升级为 +23%）；作用域见下方"入席干员，不含博士"
+    dish_special_dim = _cooking.get_dish_special_dim(recipe_id)
+    dish_special_ex = _cooking.is_dish_special_ex(recipe_id)
+    dish_special_rate = 0.23 if dish_special_ex else 0.15
 
     # 删除该食物
     handle_delete_food(character_id,add_time=add_time,change_data=change_data,now_time=now_time)
@@ -8211,11 +8215,13 @@ def handle_eat_add_just(
                 if feast_effect == "starlight":
                     base_chara_state_common_settle(chara_id, state_add * 2, 11, 0, change_data_to_target_change = change_data)
 
-        # 仅食物加体力
+        # 仅食物加体力（本菜装了「体力」型自选特技时按倍率放大）
         if eat_flag:
-            handle_add_small_hit_point(chara_id,add_time=hpmp_add,change_data=target_change,now_time=now_time)
-        # 都加气力
-        handle_add_small_mana_point(chara_id,add_time=hpmp_add,change_data=target_change,now_time=now_time)
+            hp_add = int(hpmp_add * (1 + dish_special_rate)) if dish_special_dim == "体力" else hpmp_add
+            handle_add_small_hit_point(chara_id,add_time=hp_add,change_data=target_change,now_time=now_time)
+        # 都加气力（本菜装了「气力」型自选特技时按倍率放大）
+        mp_add = int(hpmp_add * (1 + dish_special_rate)) if dish_special_dim == "气力" else hpmp_add
+        handle_add_small_mana_point(chara_id,add_time=mp_add,change_data=target_change,now_time=now_time)
         # 食物结算饥饿值，饮品结算尿意值
         if eat_flag:
             handle_hunger_point_zero(chara_id,add_time=add_time,change_data=target_change,now_time=now_time)
@@ -8224,19 +8230,49 @@ def handle_eat_add_just(
         # 清除进食状态
         handle_eat_food_flag_to_0(chara_id,add_time=add_time,change_data=target_change,now_time=now_time)
 
-        # 庆典氛围：团圆/丰盛/安眠曲/星光对入席者的身心效果
-        if feast_flag:
+        # 庆典氛围：团圆/家常/丰盛/安眠曲/星光对入席者的身心效果
+        # 作用域：只对入席干员生效，**博士自己不吃这些效果**（review #7 定案；修复原先博士也会被扣疲劳/清生气的问题）
+        if feast_flag and chara_id:
             if feast_effect == "reunion":
                 target_data.tired_point = max(0, target_data.tired_point - 50)
                 target_data.angry_point = 0
                 # 怒气清零时同步解除"对玩家生气"标志，否则干员仍按生气状态互动
                 target_data.sp_flag.angry_with_player = False
+            elif feast_effect == "home":
+                # 家常（罗德岛家宴）：疲劳 -10，且对你的好感与信赖各 +15%
+                target_data.tired_point = max(0, target_data.tired_point - 10)
+                _saved_home_target = character_data.target_character_id
+                character_data.target_character_id = chara_id
+                try:
+                    base_chara_favorability_and_trust_common_settle(character_id, int(state_add * 0.15), True, 0, 0, change_data, chara_id)
+                    base_chara_favorability_and_trust_common_settle(character_id, int(state_add * 0.15), False, 0, 0, change_data, chara_id)
+                finally:
+                    character_data.target_character_id = _saved_home_target
             elif feast_effect == "hearty":
                 target_data.tired_point = max(0, target_data.tired_point - 30)
             elif feast_effect == "melody":
                 target_data.desire_point = max(0, target_data.desire_point - 30)
             elif feast_effect == "starlight":
                 target_data.tired_point = max(0, target_data.tired_point - 20)
+
+        # 本菜自选特技的「状态向」进食效果：只对入席干员生效、不含博士
+        if chara_id and dish_special_dim:
+            _special_gain = 23 if dish_special_ex else 15
+            if dish_special_dim == "疲劳":
+                target_data.tired_point = max(0, target_data.tired_point - _special_gain)
+            elif dish_special_dim == "怒气":
+                target_data.angry_point = max(0, target_data.angry_point - _special_gain)
+            elif dish_special_dim == "心情":
+                handle_mood_to_good(chara_id, add_time, change_data, now_time)
+            elif dish_special_dim in ("好感", "信赖"):
+                _saved_special_target = character_data.target_character_id
+                character_data.target_character_id = chara_id
+                try:
+                    base_chara_favorability_and_trust_common_settle(
+                        character_id, int(state_add * dish_special_rate), dish_special_dim == "好感", 0, 0, change_data, chara_id
+                    )
+                finally:
+                    character_data.target_character_id = _saved_special_target
 
         # 酒类食物
         if recipe_data.type == 3:

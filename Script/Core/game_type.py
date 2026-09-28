@@ -1428,7 +1428,7 @@ class Rhodes_Island:
         self.recipe_proficiency: Dict[int, int] = {}
         """ 菜谱熟练度：键为菜谱id，值为累计制作次数（放 Rhodes_Island 使其随新周目重建而重置） """
         self.recipe_special: Dict[int, str] = {}
-        """ 菜谱宗师特技：键为菜谱id，值为特技名（fire/fast/batch/stable），由熟练度系统在宗师时赋予 """
+        """ 菜谱自选特技：键为菜谱id，值为玩家选的候选名（每菜最多 1 个，见 cooking.DISH_SPECIAL_*）；庆典的固定效果不入档 """
 
         # 医疗部
         self.medical_patients_today: Dict[int, Any] = {}
