@@ -8327,6 +8327,24 @@ def handle_eat_add_just(
         info = draw.WaitDraw()
         info.text = _("\n○庆典开席！{0}人共同享用了{1}\n").format(len(eat_food_chara_id_list), recipe_data.name)
         info.draw()
+
+    # 结算提示：把这道菜自带的固定效果与已装的自选特技亮出来
+    # （review #7：显示端不能只剩「未选择」；庆典固定效果 = 会食效果，自选特技 = 4 选 1）
+    effect_lines = []
+    feast_effect_text = _cooking.get_feast_effect_text(recipe_id)
+    if feast_effect_text:
+        effect_lines.append(_("○本菜特殊效果：{0}").format(feast_effect_text))
+    chosen_name = _cooking.get_dish_special_choice(recipe_id)
+    if chosen_name:
+        effect_lines.append(_("○本菜特技：{0}（{1}，{2}）").format(
+            chosen_name, _cooking.get_dish_special_dim(recipe_id), _cooking.dish_special_effect_text(recipe_id)
+        ))
+    if effect_lines:
+        effect_draw = draw.NormalDraw()
+        effect_draw.text = "\n" + "\n".join(effect_lines) + "\n"
+        effect_draw.draw()
+
+
 @settle_behavior.add_settle_behavior_effect(constant_effect.BehaviorEffect.ADD_HPMP_MAX)
 def handle_add_hpmp_max(
         character_id: int,
