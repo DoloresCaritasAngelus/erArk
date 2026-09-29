@@ -769,6 +769,11 @@ PROFICIENCY_ATTR = "recipe_proficiency"
 """ 菜谱熟练度的玩家属性名 """
 SPECIAL_EFFECTS_ATTR = "recipe_special"
 """ 菜谱自选特技的玩家属性名（Dict[菜谱id, 候选名]，每菜最多 1 个；庆典的固定效果不入档） """
+CHEER_MIN_DEDUCT = 1500
+""" 「抚慰」型自选特技的最低扣除量：扣除 = max(当前值 × 比例, 本值)，**不设上限**
+数值依据 games/erark/tools/eval_cheer_floor.py（真实存档存量 + 源码增量公式复算）：
+一次重度单体事件（苦痛·大量）≈1060、常规反感事件 ≈65；一天按 3–4 顿计，
+下限 1500 ⇒ 一顿 ≥ 一次重度事件量级，一天 4 顿 ≈6000 < 一次反感重击（≈10560） """
 
 
 def is_master_unlocked() -> bool:
