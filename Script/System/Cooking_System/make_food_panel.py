@@ -877,14 +877,14 @@ class SeeFoodListByFoodNameDraw:
             Return arguments:
             tuple -- (基础品质, 大师模式是否生效, 品质上限, 最大可制作数量)
             """
-            # 基础品质只由料理技能决定：熟练度不提供任何品质加成（review #6 收严行为）
+            # 基础品质只由料理技能决定：熟练度不提供任何品质加成（上游 review 第 6 点）
             base_quality = cooking.get_base_food_quality(0)
             # 如果当前是酒类，且当前地点在酒吧，则品质额外+1
             if food_recipe.type == 3 and handle_premise.handle_in_bar(0):
                 base_quality += 1
             # 标准模式上限为美味（绝珍只能靠精细答题或大师模式达到），这行同时兜住上面「酒类在酒吧 +1」
             base_quality = min(base_quality, cooking.get_good_quality_cap())
-            # 大师模式：全局模式2 + 料理技能达标（本菜谱开关与 stable 特技已随 review #7 退役）
+            # 大师模式：全局模式2 + 料理技能达标（本菜谱开关与 stable 特技已随上游 review 第 7 点退役）
             global_master = cooking.is_master_unlocked()
             master_active = self.cook_mode == 2 and global_master
             max_quality = base_quality
@@ -1043,7 +1043,7 @@ class SeeFoodListByFoodNameDraw:
                         preview_draw = draw.NormalDraw()
                         preview_draw.text = _("　[预览]{0}（{1} {2}）").format(slot_item[0], slot_item[1], slot_effect)
                         preview_draw.draw()
-                    # 一行一条，避免和后面的批量制作按钮挤在同一行（用户 2026-09-29 截图）
+                    # 一行一条，避免和后面的批量制作按钮挤在同一行
                     line_feed.draw()
 
             # 数量调整按钮（先换行，避免和特技按钮挤在一起）
@@ -1157,7 +1157,7 @@ class SeeFoodListByFoodNameDraw:
         food_recipe: game_type.Recipes = cache.recipe_data[int(self.food_cid)]
         recipe_cid = int(self.food_cid)
 
-        # 计算食物品质：基础品质只由料理技能决定（熟练度不提供任何品质加成，review #6 收严行为），
+        # 计算食物品质：基础品质只由料理技能决定（熟练度不提供任何品质加成），
         # 之后封顶到标准模式上限「美味」（绝珍只能靠精细答题或大师模式达到）
         base_quality = cooking.get_base_food_quality(0)
         # 如果当前是酒类，且当前地点在酒吧，则品质额外+1
@@ -1165,7 +1165,7 @@ class SeeFoodListByFoodNameDraw:
             base_quality += 1
         base_quality = min(base_quality, cooking.get_good_quality_cap())
         food_quality = base_quality
-        # 大师模式：全局模式2 + 料理技能达标（本菜谱开关与 stable 特技已随 review #7 退役）
+        # 大师模式：全局模式2 + 料理技能达标（本菜谱开关与 stable 特技已随上游 review 第 7 点退役）
         global_master = cooking.is_master_unlocked()
         master_active = self.cook_mode == 2 and global_master
         if master_active:

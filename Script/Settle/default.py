@@ -8237,7 +8237,7 @@ def handle_eat_add_just(
         handle_eat_food_flag_to_0(chara_id,add_time=add_time,change_data=target_change,now_time=now_time)
 
         # 庆典氛围：团圆/家常/丰盛/安眠曲/星光对入席者的身心效果
-        # 作用域（2026-09-30 定案）：自身状态类对**所有入席者**生效（含博士）；
+        # 作用域：自身状态类对**所有入席者**生效（含博士）；
         #   「好感/信赖」是干员→博士方向的存储，博士不适用 → 仅 chara_id 非零时结算；
         #   「怒气清零/解除生气」同样不给博士（博士没有这套语义）
         if feast_flag and character_id == 0:
@@ -8265,7 +8265,7 @@ def handle_eat_add_just(
             elif feast_effect == "starlight":
                 target_data.tired_point = max(0, target_data.tired_point - 20)
 
-        # 本菜自选特技的「状态向」进食效果：对**食用者**生效（2026-09-30 起含博士）
+        # 本菜自选特技的「状态向」进食效果：对**食用者**生效（含博士）
         # 例外：「好感/信赖」是干员→博士方向的存储，博士不适用（传 0 会落回 target 造成重复加值）
         # 「掩味」不在这里结算：它改的是「特殊调味被喂食时产生的反感增量」这一层，
         #   见 handle_high_obscenity_failed_adjust 的 ×0.35/×0.2（不是扣已经攒下来的反感）
@@ -8348,14 +8348,14 @@ def handle_eat_add_just(
                 if _redirect_target:
                     character_data.target_character_id = _saved_target
 
-    # 庆典开席播报（只有博士发起的会食才算「开席」；NPC 自己吃庆典菜走单人进食路径，见 review #1b）
+    # 庆典开席播报（只有博士发起的会食才算「开席」；NPC 自己吃庆典菜走单人进食路径，见上游 review 第 1b 点）
     if feast_flag and character_id == 0:
         info = draw.WaitDraw()
         info.text = _("\n○庆典开席！{0}人共同享用了{1}\n").format(len(eat_food_chara_id_list), recipe_data.name)
         info.draw()
 
     # 结算提示：把这道菜自带的固定效果与已装的自选特技亮出来
-    # （review #7：显示端不能只剩「未选择」；庆典固定效果 = 会食效果，自选特技 = 4 选 1）
+    # （上游 review 第 7 点：显示端不能只剩「未选择」；庆典固定效果 = 会食效果，自选特技 = 4 选 1）
     effect_lines = []
     feast_effect_text = _cooking.get_feast_effect_text(recipe_id) if feast_flag and character_id == 0 else ""
     if feast_effect_text:
@@ -9793,9 +9793,9 @@ def handle_high_obscenity_failed_adjust(
             from Script.System.Cooking_System import cooking as _ck
             if _ck.get_food_special_dim(_fed_food) == "掩味":
                 _mask_ex = _ck.is_dish_special_ex(getattr(_fed_food, "recipe", -1))
-                # 「不作掩饰直接射上去」的精液：掩味压不住多少（这条是反发刻印的主要来源）
-                if getattr(_fed_food, "special_seasoning", 0) == _ck.DIRECT_SEMEN_SEASONING:
-                    now_add_lust *= _ck.MASKED_REJECT_MULT_DIRECT_EX if _mask_ex else _ck.MASKED_REJECT_MULT_DIRECT
+                # 精液类（11 巧妙混入 / 12 不作掩饰）与药剂类分开定档：精液即使掩了味也保留刻印压力
+                if getattr(_fed_food, "special_seasoning", 0) in _ck.SEMEN_SEASONING_SET:
+                    now_add_lust *= _ck.MASKED_REJECT_MULT_SEMEN_EX if _mask_ex else _ck.MASKED_REJECT_MULT_SEMEN
                 else:
                     now_add_lust *= _ck.MASKED_REJECT_MULT_EX if _mask_ex else _ck.MASKED_REJECT_MULT
         now_add_lust = int(now_add_lust)
