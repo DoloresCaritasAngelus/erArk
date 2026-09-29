@@ -9792,7 +9792,12 @@ def handle_high_obscenity_failed_adjust(
         if _fed_food is not None and getattr(_fed_food, "special_seasoning", 0) != 0:
             from Script.System.Cooking_System import cooking as _ck
             if _ck.get_food_special_dim(_fed_food) == "掩味":
-                now_add_lust *= 0.2 if _ck.is_dish_special_ex(getattr(_fed_food, "recipe", -1)) else 0.35
+                _mask_ex = _ck.is_dish_special_ex(getattr(_fed_food, "recipe", -1))
+                # 「不作掩饰直接射上去」的精液：掩味压不住多少（这条是反发刻印的主要来源）
+                if getattr(_fed_food, "special_seasoning", 0) == _ck.DIRECT_SEMEN_SEASONING:
+                    now_add_lust *= _ck.MASKED_REJECT_MULT_DIRECT_EX if _mask_ex else _ck.MASKED_REJECT_MULT_DIRECT
+                else:
+                    now_add_lust *= _ck.MASKED_REJECT_MULT_EX if _mask_ex else _ck.MASKED_REJECT_MULT
         now_add_lust = int(now_add_lust)
         target_data.status_data[20] += now_add_lust
         target_data.status_data[20] = min(99999, target_data.status_data[20])

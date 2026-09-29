@@ -769,6 +769,16 @@ PROFICIENCY_ATTR = "recipe_proficiency"
 """ 菜谱熟练度的玩家属性名 """
 SPECIAL_EFFECTS_ATTR = "recipe_special"
 """ 菜谱自选特技的玩家属性名（Dict[菜谱id, 候选名]，每菜最多 1 个；庆典的固定效果不入档） """
+MASKED_REJECT_MULT = 0.35
+""" 「掩味」对"被喂特殊调味、判定失败"时反感增量的折扣（精液·巧妙混入 / 药剂类） """
+MASKED_REJECT_MULT_EX = 0.20
+""" 同上，EX 阶 """
+MASKED_REJECT_MULT_DIRECT = 0.15
+""" 「掩味」对**不作掩饰直接射上去的精液**（调味 12）的折扣：压不住多少，仍保留反发刻印压力 """
+MASKED_REJECT_MULT_DIRECT_EX = 0.08
+""" 同上，EX 阶：实测 4 次喂食也涨不到反发刻印 1 级（第 6 次才到） """
+DIRECT_SEMEN_SEASONING = 12
+""" 特殊调味 id：射入精液（不作掩饰直接射上去） """
 CHEER_MIN_DEDUCT = 1500
 """ 「抚慰」型自选特技的最低扣除量：扣除 = max(当前值 × 比例, 本值)，**不设上限**
 数值依据 games/erark/tools/eval_cheer_floor.py（真实存档存量 + 源码增量公式复算）：
