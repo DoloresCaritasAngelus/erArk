@@ -1032,18 +1032,23 @@ class SeeFoodListByFoodNameDraw:
                 chosen_name = cooking.get_dish_special_choice(recipe_cid)
                 for slot_index, slot_item in enumerate(cooking.get_dish_special_candidates(recipe_cid)):
                     slot_effect = slot_item[3] if cooking.is_dish_special_ex(recipe_cid) else slot_item[2]
+                    # 一行一条（前缀＋名字＋维度），效果文案单独一行完整显示：
+                    # 按钮文本超宽会被截断成「本菜：制作 耗~」，玩家看不到完整效果
                     if _slot_tier >= cooking.PROF_SLOT_TIER:
                         slot_prefix = _("[已选]") if slot_item[0] == chosen_name else _("[选择]")
-                        slot_text = _("{0}{1}（{2} {3}）").format(slot_prefix, slot_item[0], slot_item[1], slot_effect)
+                        slot_text = _("{0}{1}（{2}）").format(slot_prefix, slot_item[0], slot_item[1])
                         slot_draw = draw.LeftButton(slot_text, "feast_dish_special_" + str(slot_index), self.width)
                         slot_draw.draw()
                         return_list.append(slot_draw.return_text)
                         self._dish_special_returns[slot_draw.return_text] = slot_item[0]
                     else:
                         preview_draw = draw.NormalDraw()
-                        preview_draw.text = _("　[预览]{0}（{1} {2}）").format(slot_item[0], slot_item[1], slot_effect)
+                        preview_draw.text = _("　[预览]{0}（{1}）").format(slot_item[0], slot_item[1])
                         preview_draw.draw()
-                    # 一行一条，避免和后面的批量制作按钮挤在同一行
+                    line_feed.draw()
+                    effect_draw = draw.NormalDraw()
+                    effect_draw.text = _("　　{0}").format(slot_effect)
+                    effect_draw.draw()
                     line_feed.draw()
 
             # 数量调整按钮（先换行，避免和特技按钮挤在一起）
